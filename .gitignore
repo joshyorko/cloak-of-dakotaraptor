@@ -1,4 +1,27 @@
+# Signing keys - NEVER commit private keys
 cosign.key
+*.key
+*.pem
+!cosign.pub
+
+# Build artifacts
 _build_*
-output
 _build-*/**
+output/
+
+# Environment and secrets
+.env
+.env.*
+*.secret
+secrets/
+
+# Editor artifacts
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS artifacts
+.DS_Store
+Thumbs.db
