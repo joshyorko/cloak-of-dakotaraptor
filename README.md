@@ -1,26 +1,33 @@
 # cloak-of-dakotaraptor
 
-A template for building custom bootc operating system images based on the lessons from [Universal Blue](https://universal-blue.org/) and [Bluefin](https://projectbluefin.io). It is designed to be used manually, but is optimized to be bootstraped by GitHub Copilot. After set up you'll have your own custom Linux. 
+A custom bootc operating system image based on [Universal Blue](https://universal-blue.org/) and [Bluefin](https://projectbluefin.io). This OS is built using the finpilot template and leverages Bluefin's robust build system and shared components.
 
-This template uses the **multi-stage build architecture** from , combining resources from multiple OCI containers for modularity and maintainability. See the [Architecture](#architecture) section below for details.
+This image uses the **multi-stage build architecture** from @projectbluefin/finpilot, combining resources from multiple OCI containers for modularity and maintainability. See the [Architecture](#architecture) section below for details.
 
-**Unlike previous templates, you are not modifying Bluefin and making changes.**: You are assembling your own Bluefin in the same exact way that Bluefin, Aurora, and Bluefin LTS are built. This is way more flexible and better for everyone since the image-agnostic and desktop things we love about Bluefin lives in @projectbluefin/common. 
-
- Instead, you create your own OS repository based on this template, allowing full customization while leveraging Bluefin's robust build system and shared components.
+**This is a fully customizable operating system** that assembles components in the same way that Bluefin, Aurora, and Bluefin LTS are built. The image-agnostic and desktop components from @projectbluefin/common provide a solid foundation for your custom Linux experience.
 
 > Be the one who moves, not the one who is moved.
 
-## Guided Copilot Mode
+## What Makes cloak-of-dakotaraptor Different?
 
-Here are the steps to guide copilot to make your own repo, or just use it like a regular image template.
+This image is based on **Universal Blue Silverblue** (Fedora + GNOME) and includes these customizations:
 
-1. Click the green "Use this as a template" button and create a new repository
-2. Select your owner, pick a repo name for your OS, and a description
-3. In the "Jumpstart your project with Copilot (optional)" add this, modify to your liking:
+### Base Configuration
+- **Base Image**: `ghcr.io/ublue-os/silverblue-main:latest`
+- **Desktop**: GNOME (from base image)
+- **Package Manager**: dnf5 (build-time), Homebrew (runtime), Flatpak (GUI apps)
 
-```
-Use @projectbluefin/finpilot as a template, name the OS the repository name. Ensure the entire operating system is bootstrapped. Ensure all github actions are enabled and running.  Ensure the README has the github setup instructions for cosign and the other steps required to finish the task.
-```
+### Added Packages (Build-time)
+- *(Currently using base configuration - customize in `build/10-build.sh`)*
+
+### Added Applications (Runtime)
+- **CLI Tools (Homebrew)**: *(Configure in `custom/brew/` Brewfiles)*
+- **GUI Apps (Flatpak)**: *(Configure in `custom/flatpaks/` preinstall files)*
+
+### Configuration Changes
+- *(No additional modifications yet - customize as needed)*
+
+*Ready to customize? See [Quick Start](#quick-start) below.*
 
 ## What's Included
 
@@ -61,28 +68,60 @@ Use @projectbluefin/finpilot as a template, name the OS the repository name. Ens
 
 ## Quick Start
 
-### 1. Create Your Repository
+### 1. Repository Setup ✅
 
-Click "Use this template" to create a new repository from this template.
+This repository has been bootstrapped with the name `cloak-of-dakotaraptor`. All configuration files have been updated:
 
-### 2. Rename the Project
+- ✅ `Containerfile` (line 4): `# Name: cloak-of-dakotaraptor`
+- ✅ `Justfile` (line 1): `export image_name := "cloak-of-dakotaraptor"`
+- ✅ `README.md` (line 1): `# cloak-of-dakotaraptor`
+- ✅ `artifacthub-repo.yml` (line 5): `repositoryID: cloak-of-dakotaraptor`
+- ✅ `custom/ujust/README.md` (line 175): `localhost/cloak-of-dakotaraptor:stable`
+- ✅ `.github/workflows/clean.yml` (line 23): `packages: cloak-of-dakotaraptor`
 
-Important: Change `finpilot` to your repository name in these 5 files:
+### 2. Enable GitHub Actions
 
-1. `Containerfile` (line 9): `# Name: your-repo-name`
-2. `Justfile` (line 1): `export image_name := "your-repo-name"`
-3. `README.md` (line 1): `# your-repo-name`
-4. `artifacthub-repo.yml` (line 5): `repositoryID: your-repo-name`
-5. `custom/ujust/README.md` (~line 175): `localhost/your-repo-name:stable`
+**IMPORTANT:** You must enable GitHub Actions for this repository before builds can run.
 
-### 3. Enable GitHub Actions
+1. Go to the **"Actions"** tab in your repository on GitHub
+2. Click **"I understand my workflows, go ahead and enable them"**
 
-- Go to the "Actions" tab in your repository
-- Click "I understand my workflows, go ahead and enable them"
+Your first build will start automatically after enabling!
 
-Your first build will start automatically! 
+### 3. Optional: Enable Image Signing (Recommended for Production)
 
-Note: Image signing is disabled by default. Your images will build successfully without any signing keys. Once you're ready for production, see "Optional: Enable Image Signing" below.
+Image signing is **disabled by default** to allow immediate testing. Your images will build successfully without any signing keys. When you're ready for production, follow these steps:
+
+#### Generate Signing Keys
+
+```bash
+cosign generate-key-pair
+```
+
+This creates two files:
+- `cosign.key` (private key) - **Keep this secret, never commit it**
+- `cosign.pub` (public key) - Commit this to your repository
+
+#### Add Private Key to GitHub Secrets
+
+1. Copy the entire contents of `cosign.key`
+2. Go to your repository on GitHub
+3. Navigate to **Settings → Secrets and variables → Actions** ([GitHub docs](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository))
+4. Click **"New repository secret"**
+5. Name: `SIGNING_SECRET`
+6. Value: Paste the entire contents of `cosign.key`
+7. Click **"Add secret"**
+
+#### Update Public Key
+
+1. Replace the contents of `cosign.pub` in your repository with your actual public key
+2. Commit and push the change
+
+#### Enable Signing in Workflow
+
+Edit `.github/workflows/build.yml` and uncomment the signing steps (if they exist). The template may not include commented signing steps by default - in that case, image signing is disabled.
+
+**Note:** Never commit `cosign.key` to the repository. It's already in `.gitignore`.
 
 ### 4. Customize Your Image
 
@@ -115,57 +154,12 @@ All changes should be made via pull requests:
 
 ### 6. Deploy Your Image
 
-Switch to your image:
+Once your image has been built (after enabling GitHub Actions and pushing to main), you can deploy it:
+
 ```bash
-sudo bootc switch ghcr.io/your-username/your-repo-name:stable
+sudo bootc switch ghcr.io/joshyorko/cloak-of-dakotaraptor:stable
 sudo systemctl reboot
 ```
-
-## Optional: Enable Image Signing
-
-Image signing is disabled by default to let you start building immediately. However, signing is strongly recommended for production use.
-
-### Why Sign Images?
-
-- Verify image authenticity and integrity
-- Prevent tampering and supply chain attacks
-- Required for some enterprise/security-focused deployments
-- Industry best practice for production images
-
-### Setup Instructions
-
-1. Generate signing keys:
-```bash
-cosign generate-key-pair
-```
-
-This creates two files:
-- `cosign.key` (private key) - Keep this secret
-- `cosign.pub` (public key) - Commit this to your repository
-
-2. Add the private key to GitHub Secrets:
-   - Copy the entire contents of `cosign.key`
-   - Go to your repository on GitHub
-   - Navigate to Settings → Secrets and variables → Actions ([GitHub docs](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository))
-   - Click "New repository secret"
-   - Name: `SIGNING_SECRET`
-   - Value: Paste the entire contents of `cosign.key`
-   - Click "Add secret"
-
-3. Replace the contents of `cosign.pub` with your public key:
-   - Open `cosign.pub` in your repository
-   - Replace the placeholder with your actual public key
-   - Commit and push the change
-
-4. Enable signing in the workflow:
-   - Edit `.github/workflows/build.yml`
-   - Find the "OPTIONAL: Image Signing with Cosign" section.
-   - Uncomment the steps to install Cosign and sign the image (remove the `#` from the beginning of each line in that section).
-   - Commit and push the change
-
-5. Your next build will produce signed images!
-
-Important: Never commit `cosign.key` to the repository. It's already in `.gitignore`.
 
 ## Love Your Image? Let's Go to Production
 
@@ -176,7 +170,7 @@ Ready to take your custom OS to production? Enable these features for enhanced s
 - [ ] **Enable Image Signing** (Recommended)
   - Provides cryptographic verification of your images
   - Prevents tampering and ensures authenticity
-  - See "Optional: Enable Image Signing" section above for setup instructions
+  - See "Quick Start → Step 3: Optional: Enable Image Signing" section above for setup instructions
   - Status: **Disabled by default** to allow immediate testing
 
 - [ ] **Enable SBOM Attestation** (Recommended)
@@ -262,7 +256,7 @@ Your workflow will:
 
 Users can verify your images with:
 ```bash
-cosign verify --key cosign.pub ghcr.io/your-username/your-repo-name:stable
+cosign verify --key cosign.pub ghcr.io/joshyorko/cloak-of-dakotaraptor:stable
 ```
 
 ## Detailed Guides
