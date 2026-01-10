@@ -67,16 +67,16 @@ if [ -d /tmp/ctx/custom/ujust ]; then
     find /tmp/ctx/custom/ujust -iname '*.just' -exec printf "\n\n" \; -exec cat {} \; >> /usr/share/ublue-os/just/60-custom.just 2>/dev/null || true
 fi
 
-# Copy Flatpak preinstall files
+# Copy Flatpak preinstall files (to /usr/share for runtime handling)
 if [ -d /tmp/ctx/custom/flatpaks ]; then
-    mkdir -p /usr/etc/flatpak/preinstall.d/
-    cp -v /tmp/ctx/custom/flatpaks/*.preinstall /usr/etc/flatpak/preinstall.d/ 2>/dev/null || true
+    mkdir -p /usr/share/ublue-os/flatpaks/
+    cp -v /tmp/ctx/custom/flatpaks/*.preinstall /usr/share/ublue-os/flatpaks/ 2>/dev/null || true
 fi
 
-# Copy VS Code extensions list to skeleton
+# Copy VS Code extensions list (to /usr/share for runtime handling)
 if [ -f /tmp/ctx/custom/vscode-extensions.list ]; then
-    mkdir -p /usr/etc/skel/.config/
-    cp /tmp/ctx/custom/vscode-extensions.list /usr/etc/skel/.config/
+    mkdir -p /usr/share/ublue-os/
+    cp /tmp/ctx/custom/vscode-extensions.list /usr/share/ublue-os/
 fi
 
 # Copy user hooks
