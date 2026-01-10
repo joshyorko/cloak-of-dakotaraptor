@@ -69,14 +69,14 @@ fi
 
 # Copy Flatpak preinstall files
 if [ -d /tmp/ctx/custom/flatpaks ]; then
-    mkdir -p /etc/flatpak/preinstall.d/
-    cp -v /tmp/ctx/custom/flatpaks/*.preinstall /etc/flatpak/preinstall.d/ 2>/dev/null || true
+    mkdir -p /usr/etc/flatpak/preinstall.d/
+    cp -v /tmp/ctx/custom/flatpaks/*.preinstall /usr/etc/flatpak/preinstall.d/ 2>/dev/null || true
 fi
 
 # Copy VS Code extensions list to skeleton
 if [ -f /tmp/ctx/custom/vscode-extensions.list ]; then
-    mkdir -p /etc/skel/.config/
-    cp /tmp/ctx/custom/vscode-extensions.list /etc/skel/.config/
+    mkdir -p /usr/etc/skel/.config/
+    cp /tmp/ctx/custom/vscode-extensions.list /usr/etc/skel/.config/
 fi
 
 # Copy user hooks
